@@ -95,8 +95,9 @@ namespace ChannelAdvisorAccess.REST.Services.Orders
 		/// <typeparam name="T"></typeparam>
 		/// <param name="startDate"></param>
 		/// <param name="endDate"></param>
+		/// <param name="mark"></param>
 		/// <returns></returns>
-		public Task< IEnumerable < T > > GetOrdersAsync< T >( DateTime startDate, DateTime endDate ) where T : OrderResponseItem
+		public Task< IEnumerable < T > > GetOrdersAsync< T >( DateTime startDate, DateTime endDate, Mark mark = null ) where T : OrderResponseItem
 		{
 			OrderCriteria criteria = new OrderCriteria()
 			{
@@ -104,7 +105,7 @@ namespace ChannelAdvisorAccess.REST.Services.Orders
 				StatusUpdateFilterEndTimeGMT = endDate,
 			};
 
-			return this.GetOrdersAsync< T >( criteria );
+			return this.GetOrdersAsync< T >( criteria, mark );
 		}
 
 		/// <summary>
@@ -155,7 +156,7 @@ namespace ChannelAdvisorAccess.REST.Services.Orders
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: filter ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: filter ) );
 
 				var result = await this.GetResponseAsync< Models.Order >( url, mark ).ConfigureAwait( false );
 
@@ -167,13 +168,11 @@ namespace ChannelAdvisorAccess.REST.Services.Orders
 
 				orders.AddRange( result.Response.Select( order => order.ToOrderResponseDetailComplete( distributionCenters ) ).OfType< T >() );
 
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark: mark, methodResult: orders.ToJson(), additionalInfo: this.AdditionalLogInfo(), methodParameters: filter ) );
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark: mark, methodResult: orders.ToJson(), additionalInfo: this.AdditionalLogInfo(), methodParameters: filter ) );
 			}
 			catch( Exception exception )
 			{
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: filter ), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception, methodParameters: filter );
 			}
 
 			return orders;

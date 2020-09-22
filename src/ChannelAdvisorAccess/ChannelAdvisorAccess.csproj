@@ -194,6 +194,7 @@
     <Compile Include="Exceptions\ChannelAdvisorException.cs" />
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Misc\AP.cs" />
+    <Compile Include="Misc\CallInfo.cs" />
     <Compile Include="Misc\MarketplaceSiteTokenEnum.cs" />
     <Compile Include="Misc\ChannelAdvisorConfig.cs" />
     <Compile Include="Misc\ExtensionsInternal.cs" />

@@ -39,9 +39,10 @@ namespace ChannelAdvisorAccess.Services.Orders
 		/// </summary>
 		/// <param name="startDate">The start date.</param>
 		/// <param name="endDate">The end date.</param>
+		/// <param name="mark"></param>
 		/// <returns>Iterator to go over orders 1 order at a time.</returns>
 		/// <remarks>The best way to process orders is to use <c>foreach</c></remarks>
-		Task< IEnumerable< T > > GetOrdersAsync< T >( DateTime startDate, DateTime endDate )
+		Task< IEnumerable< T > > GetOrdersAsync< T >( DateTime startDate, DateTime endDate, Mark mark = null )
 			where T : OrderResponseItem;
 
 		/// <summary>

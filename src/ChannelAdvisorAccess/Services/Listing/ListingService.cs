@@ -37,7 +37,7 @@ namespace ChannelAdvisorAccess.Services.Listing
 		#region Ping
 		public void Ping()
 		{
-			AP.CreateQuery( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( () =>
+			AP.CreateQuery( this.AdditionalLogInfo ).Do( () =>
 			{
 				var result = this._client.Ping( this._credentials );
 				this.CheckCaSuccess( result );
@@ -46,7 +46,7 @@ namespace ChannelAdvisorAccess.Services.Listing
 
 		public async Task PingAsync()
 		{
-			await AP.CreateQueryAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( async () =>
+			await AP.CreateQueryAsync( this.AdditionalLogInfo ).Do( async () =>
 			{
 				var result = await this._client.PingAsync( this._credentials ).ConfigureAwait( false );
 				this.CheckCaSuccess( result.PingResult );
@@ -59,7 +59,7 @@ namespace ChannelAdvisorAccess.Services.Listing
 			if( itemSkus == null || itemSkus.Count == 0 )
 				return;
 
-			itemSkus.DoWithPages( 100, s => AP.CreateSubmit( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( () =>
+			itemSkus.DoWithPages( 100, s => AP.CreateSubmit( this.AdditionalLogInfo ).Do( () =>
 			{
 				var result = this._client.WithdrawListings( this._credentials, this.AccountId, s.ToArray(), null, withdrawReason );
 				this.CheckCaSuccess( result );
@@ -71,7 +71,7 @@ namespace ChannelAdvisorAccess.Services.Listing
 			if( itemSkus == null || itemSkus.Count == 0 )
 				return;
 
-			await itemSkus.DoWithPagesAsync( 100, async s => await AP.CreateSubmitAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( async () =>
+			await itemSkus.DoWithPagesAsync( 100, async s => await AP.CreateSubmitAsync( this.AdditionalLogInfo ).Do( async () =>
 			{
 				var result = await this._client.WithdrawListingsAsync( this._credentials, this.AccountId, s.ToArray(), null, withdrawReason ).ConfigureAwait( false );
 				this.CheckCaSuccess( result.WithdrawListingsResult );

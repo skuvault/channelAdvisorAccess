@@ -208,7 +208,7 @@ namespace ChannelAdvisorAccess.REST.Services
 			const string requestTokenUrl = "oauth2/token";
 
 			var payloadForLog = new { GrantType = requestData[ "grant_type" ], RefreshToken = ChannelAdvisorLogger.SanitizeToken( requestData[ "refresh_token" ] ) };
-			ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, methodParameters: requestTokenUrl, payload: payloadForLog.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+			ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: requestTokenUrl, payload: payloadForLog.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 
 			try
 			{
@@ -223,7 +223,7 @@ namespace ChannelAdvisorAccess.REST.Services
 				this._accessTokenExpiredUtc = DateTime.UtcNow.AddSeconds( result.ExpiresIn );
 
 				var resultForLog = new { AccessToken = ChannelAdvisorLogger.SanitizeToken( result.AccessToken ), result.Error, ExpiresOn = this._accessTokenExpiredUtc };
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodParameters: requestTokenUrl, methodResult: resultForLog.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: requestTokenUrl, methodResult: resultForLog.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 			}
 			catch( Exception ex )
 			{
@@ -363,12 +363,12 @@ namespace ChannelAdvisorAccess.REST.Services
 					{
 						using( var cancellationTokenSource = new CancellationTokenSource( _requestTimeout ) ) 
 						{
-							ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, methodParameters: url, additionalInfo : this.AdditionalLogInfo() ) );
+							ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: url, additionalInfo : this.AdditionalLogInfo() ) );
 
 							var httpResponse = await this.HttpClient.GetAsync( url, cancellationTokenSource.Token ).ConfigureAwait( false );
 							var responseStr = await httpResponse.Content.ReadAsStringAsync();
 
-							ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodParameters: url, methodResult: responseStr, additionalInfo : this.AdditionalLogInfo() ) );
+							ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: url, methodResult: responseStr, additionalInfo : this.AdditionalLogInfo() ) );
 
 							await this.ThrowIfError( httpResponse, responseStr, mark ).ConfigureAwait( false );
 					
@@ -378,8 +378,8 @@ namespace ChannelAdvisorAccess.REST.Services
 						}
 					}, 
 					( exception, timeSpan, retryAttempt ) => { 
-						string retryDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: url );
-						ChannelAdvisorLogger.LogTraceRetryStarted( String.Format("Call failed due to {0} trying repeat call {1} time, waited {2} seconds. Details: {3}", exception, retryAttempt, timeSpan.Seconds, retryDetails ) );
+						var retryInfo = new RetryInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: url, retryAttempt: retryAttempt, waitDurationSecs: timeSpan.TotalSeconds );
+						ChannelAdvisorLogger.LogTraceRetryException( retryInfo, exception );
 					} );
 			});
 		}
@@ -416,12 +416,12 @@ namespace ChannelAdvisorAccess.REST.Services
 						using( var cancellationTokenSource = new CancellationTokenSource( _requestTimeout ) )
 						{
 							var content = new StringContent( body, Encoding.UTF8, "text/plain" );
-							ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, methodParameters: url, payload: body, additionalInfo : this.AdditionalLogInfo() ) );
+							ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: url, payload: body, additionalInfo : this.AdditionalLogInfo() ) );
 							
 							var httpResponse = await HttpClient.PostAsync( apiUrl + "?access_token=" + this._accessToken, content, cancellationTokenSource.Token ).ConfigureAwait( false );
 							var responseStr = await httpResponse.Content.ReadAsStringAsync().ConfigureAwait( false );
 
-							ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodParameters: url, methodResult: responseStr, additionalInfo : this.AdditionalLogInfo() ) );
+							ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: url, methodResult: responseStr, additionalInfo : this.AdditionalLogInfo() ) );
 
 							await this.ThrowIfError( httpResponse, responseStr, mark ).ConfigureAwait( false );
 
@@ -431,8 +431,8 @@ namespace ChannelAdvisorAccess.REST.Services
 						}
 					}, 
 					( exception, timeSpan, retryAttempt ) => { 
-						string retryDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: url );
-						ChannelAdvisorLogger.LogTraceRetryStarted( String.Format("Call failed due to {0} trying repeat call {1} time, waited {2} seconds. Details: {3}", exception, retryAttempt, timeSpan.Seconds, retryDetails ) );
+						var retryInfo = new RetryInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: url, retryAttempt: retryAttempt, waitDurationSecs: timeSpan.TotalSeconds );
+						ChannelAdvisorLogger.LogTraceRetryException( retryInfo, exception );
 					} );
 			});
 		}
@@ -456,11 +456,11 @@ namespace ChannelAdvisorAccess.REST.Services
 						{
 							var payload = JsonConvert.SerializeObject( data );
 							var content = new StringContent( payload, Encoding.UTF8, "application/json" );
-							ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, methodParameters: apiUrl, payload: payload, additionalInfo : this.AdditionalLogInfo() ) );
+							ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: apiUrl, payload: payload, additionalInfo : this.AdditionalLogInfo() ) );
 							
 							var httpResponse = await HttpClient.PostAsync( apiUrl + "?access_token=" + this._accessToken, content, cancellationTokenSource.Token ).ConfigureAwait( false );
 
-							ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodParameters: apiUrl, additionalInfo : this.AdditionalLogInfo() ) );
+							ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: apiUrl, additionalInfo : this.AdditionalLogInfo() ) );
 							
 							await this.ThrowIfError( httpResponse, null, mark ).ConfigureAwait( false );
 
@@ -468,8 +468,8 @@ namespace ChannelAdvisorAccess.REST.Services
 						}
 					}, 
 					( exception, timeSpan, retryAttempt ) => { 
-						string retryDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: apiUrl );
-						ChannelAdvisorLogger.LogTraceRetryStarted( String.Format("Call failed due to {0} trying repeat call {1} time, waited {2} seconds. Details: {3}", exception, retryAttempt, timeSpan.Seconds, retryDetails ) );
+						var retryInfo = new RetryInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: apiUrl, retryAttempt: retryAttempt, waitDurationSecs: timeSpan.TotalSeconds );
+						ChannelAdvisorLogger.LogTraceRetryException( retryInfo, exception );
 					} );
 			});
 		}
@@ -494,11 +494,11 @@ namespace ChannelAdvisorAccess.REST.Services
 					{
 						var payload = JsonConvert.SerializeObject( data );
 						var content = new StringContent( payload, Encoding.UTF8, "application/json" );
-						ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, methodParameters: apiUrl, payload: payload, additionalInfo : this.AdditionalLogInfo() ) );
+						ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: apiUrl, payload: payload, additionalInfo : this.AdditionalLogInfo() ) );
 							
 						var httpResponse = await HttpClient.PutAsync( apiUrl + "?access_token=" + this._accessToken, content, cancellationTokenSource.Token ).ConfigureAwait( false );
 
-						ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodParameters: apiUrl, additionalInfo : this.AdditionalLogInfo() ) );
+						ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: apiUrl, additionalInfo : this.AdditionalLogInfo() ) );
 							
 						await this.ThrowIfError( httpResponse, null, mark ).ConfigureAwait( false );
 
@@ -506,8 +506,8 @@ namespace ChannelAdvisorAccess.REST.Services
 					}
 				}, 
 				( exception, timeSpan, retryAttempt ) => { 
-					string retryDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: apiUrl );
-					ChannelAdvisorLogger.LogTraceRetryStarted( String.Format("Call failed due to {0} trying repeat call {1} time, waited {2} seconds. Details: {3}", exception, retryAttempt, timeSpan.Seconds, retryDetails ) );
+					var retryInfo = new RetryInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: apiUrl, retryAttempt: retryAttempt, waitDurationSecs: timeSpan.TotalSeconds );
+					ChannelAdvisorLogger.LogTraceRetryException( retryInfo, exception );
 				} );
 			});
 		}
@@ -559,7 +559,7 @@ namespace ChannelAdvisorAccess.REST.Services
 
 						foreach( var batchPart in batches )
 						{
-							ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, methodParameters: url, payload: batchPart.ToString(), additionalInfo : this.AdditionalLogInfo() ) );
+							ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: url, payload: batchPart.ToString(), additionalInfo : this.AdditionalLogInfo() ) );
 							
 							var multipartContent = batchPart.Build();
 							var httpResponse = await HttpClient.PostAsync( url + "?access_token=" + this._accessToken, multipartContent, cancellationTokenSource.Token ).ConfigureAwait( false );
@@ -579,15 +579,15 @@ namespace ChannelAdvisorAccess.REST.Services
 
 							await this.ThrowIfError( batchStatusCode, content, mark ).ConfigureAwait( false );
 
-							ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodParameters: url, methodResult: content.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+							ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: url, methodResult: content.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 						}
 
 						return entities.ToArray();
 					}
 				}, 
 				( exception, timeSpan, retryAttempt ) => { 
-					string retryDetails = this.CreateMethodCallInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: url );
-					ChannelAdvisorLogger.LogTraceRetryStarted( String.Format("Call failed due to {0} trying repeat call {1} time, waited {2} seconds. Details: {3}", exception, retryAttempt, timeSpan.Seconds, retryDetails ) );
+					var retryInfo = new RetryInfo( mark: mark, additionalInfo: this.AdditionalLogInfo(), methodParameters: url, retryAttempt: retryAttempt, waitDurationSecs: timeSpan.TotalSeconds );
+					ChannelAdvisorLogger.LogTraceRetryException( retryInfo, exception );
 				} );
 			});
 		}

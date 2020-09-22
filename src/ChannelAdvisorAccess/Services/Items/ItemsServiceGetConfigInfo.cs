@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using ChannelAdvisorAccess.Exceptions;
 using ChannelAdvisorAccess.InventoryService;
 using ChannelAdvisorAccess.Misc;
 
@@ -16,24 +15,22 @@ namespace ChannelAdvisorAccess.Services.Items
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
 
-				var classificationConfigurationInformations = AP.CreateQuery( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( () =>
+				var classificationConfigurationInformations = AP.CreateQuery( this.AdditionalLogInfo, mark ).Get( () =>
 				{
-					ChannelAdvisorLogger.LogTraceRetryStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
+					ChannelAdvisorLogger.LogTraceRetryStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
 					var result = this._client.GetClassificationConfigurationInformation( this._credentials, this.AccountId );
 					CheckCaSuccess( result );
-					ChannelAdvisorLogger.LogTraceRetryEnd( this.CreateMethodCallInfo( mark : mark, methodResult : !this.LogDetailsEnum.HasFlag( LogDetailsEnum.LogParametersAndResultForRetry ) ? null : result.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+					ChannelAdvisorLogger.LogTraceRetryEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : !this.LogDetailsEnum.HasFlag( LogDetailsEnum.LogParametersAndResultForRetry ) ? null : result.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 					return result.ResultData;
 				} );
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodResult : classificationConfigurationInformations.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : classificationConfigurationInformations.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 				return classificationConfigurationInformations;
 			}
 			catch( Exception exception )
 			{
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception );
 			}
 		}
 
@@ -44,24 +41,22 @@ namespace ChannelAdvisorAccess.Services.Items
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
 
-				var classificationConfigurationInformations = await AP.CreateQueryAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( async () =>
+				var classificationConfigurationInformations = await AP.CreateQueryAsync( this.AdditionalLogInfo, mark ).Get( async () =>
 				{
-					ChannelAdvisorLogger.LogTraceRetryStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
+					ChannelAdvisorLogger.LogTraceRetryStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
 					var result = await this._client.GetClassificationConfigurationInformationAsync( this._credentials, this.AccountId ).ConfigureAwait( false );
 					CheckCaSuccess( result.GetClassificationConfigurationInformationResult );
-					ChannelAdvisorLogger.LogTraceRetryEnd( this.CreateMethodCallInfo( mark : mark, methodResult : !this.LogDetailsEnum.HasFlag( LogDetailsEnum.LogParametersAndResultForRetry ) ? null : result.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+					ChannelAdvisorLogger.LogTraceRetryEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : !this.LogDetailsEnum.HasFlag( LogDetailsEnum.LogParametersAndResultForRetry ) ? null : result.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 					return result.GetClassificationConfigurationInformationResult.ResultData;
 				} ).ConfigureAwait( false );
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodResult : classificationConfigurationInformations.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : classificationConfigurationInformations.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 				return classificationConfigurationInformations;
 			}
 			catch( Exception exception )
 			{
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception );
 			}
 		}
 
@@ -72,24 +67,22 @@ namespace ChannelAdvisorAccess.Services.Items
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
 
-				var distributionCenterResponses = AP.CreateQuery( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( () =>
+				var distributionCenterResponses = AP.CreateQuery( this.AdditionalLogInfo, mark ).Get( () =>
 				{
-					ChannelAdvisorLogger.LogTraceRetryStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
+					ChannelAdvisorLogger.LogTraceRetryStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
 					var result = this._client.GetDistributionCenterList( this._credentials, this.AccountId );
 					this.CheckCaSuccess( result );
-					ChannelAdvisorLogger.LogTraceRetryEnd( this.CreateMethodCallInfo( mark : mark, methodResult : !this.LogDetailsEnum.HasFlag( LogDetailsEnum.LogParametersAndResultForRetry ) ? null : result.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+					ChannelAdvisorLogger.LogTraceRetryEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : !this.LogDetailsEnum.HasFlag( LogDetailsEnum.LogParametersAndResultForRetry ) ? null : result.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 					return result.ResultData;
 				} );
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodResult : distributionCenterResponses.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : distributionCenterResponses.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 				return distributionCenterResponses;
 			}
 			catch( Exception exception )
 			{
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception );
 			}
 		}
 
@@ -100,24 +93,22 @@ namespace ChannelAdvisorAccess.Services.Items
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
 
-				var distributionCenterResponses = await AP.CreateQueryAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( async () =>
+				var distributionCenterResponses = await AP.CreateQueryAsync( this.AdditionalLogInfo, mark ).Get( async () =>
 				{
-					ChannelAdvisorLogger.LogTraceRetryStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
+					ChannelAdvisorLogger.LogTraceRetryStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
 					var result = await this._client.GetDistributionCenterListAsync( this._credentials, this.AccountId ).ConfigureAwait( false );
 					this.CheckCaSuccess( result.GetDistributionCenterListResult );
-					ChannelAdvisorLogger.LogTraceRetryEnd( this.CreateMethodCallInfo( mark : mark, methodResult : !this.LogDetailsEnum.HasFlag( LogDetailsEnum.LogParametersAndResultForRetry ) ? null : result.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+					ChannelAdvisorLogger.LogTraceRetryEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : !this.LogDetailsEnum.HasFlag( LogDetailsEnum.LogParametersAndResultForRetry ) ? null : result.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 					return result.GetDistributionCenterListResult.ResultData;
 				} ).ConfigureAwait( false );
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodResult : distributionCenterResponses.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : distributionCenterResponses.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 				return distributionCenterResponses;
 			}
 			catch( Exception exception )
 			{
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception );
 			}
 		}
 		#endregion

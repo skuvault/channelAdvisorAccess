@@ -38,7 +38,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 		#region Ping
 		public void Ping()
 		{
-			AP.CreateQuery( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( () =>
+			AP.CreateQuery( this.AdditionalLogInfo ).Do( () =>
 			{
 				var result = this._client.Ping( this._credentials );
 				this.CheckCaSuccess( result );
@@ -47,7 +47,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 
 		public async Task PingAsync()
 		{
-			await AP.CreateQueryAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( async () =>
+			await AP.CreateQueryAsync( this.AdditionalLogInfo ).Do( async () =>
 			{
 				var result = await this._client.PingAsync( this._credentials ).ConfigureAwait( false );
 				this.CheckCaSuccess( result.PingResult );
@@ -60,7 +60,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 		{
 			try
 			{
-				AP.CreateSubmit( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( () =>
+				AP.CreateSubmit( this.AdditionalLogInfo ).Do( () =>
 				{
 					var result = this._client.SubmitOrderShipmentList( this._credentials, this.AccountId, CreateShipmentByOrderId( orderId, carrierCode, classCode, trackingNumber, dateShipped ) );
 					this.CheckCaSuccess( result );
@@ -76,7 +76,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 		{
 			try
 			{
-				await AP.CreateSubmitAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( async () =>
+				await AP.CreateSubmitAsync( this.AdditionalLogInfo ).Do( async () =>
 				{
 					var result = await this._client.SubmitOrderShipmentListAsync( this._credentials, this.AccountId, CreateShipmentByOrderId( orderId, carrierCode, classCode, trackingNumber, dateShipped ) ).ConfigureAwait( false );
 					this.CheckCaSuccess( result.SubmitOrderShipmentListResult );
@@ -111,7 +111,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 		{
 			try
 			{
-				AP.CreateSubmit( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( () =>
+				AP.CreateSubmit( this.AdditionalLogInfo ).Do( () =>
 				{
 					var result = this._client.SubmitOrderShipmentList( this._credentials, this.AccountId, CreateShipmentByClientId( clientOrderId, carrierCode, classCode, trackingNumber, dateShipped ) );
 					this.CheckCaSuccess( result );
@@ -127,7 +127,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 		{
 			try
 			{
-				await AP.CreateSubmitAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( async () =>
+				await AP.CreateSubmitAsync( this.AdditionalLogInfo ).Do( async () =>
 				{
 					var result = await this._client.SubmitOrderShipmentListAsync( this._credentials, this.AccountId, CreateShipmentByClientId( clientOrderId, carrierCode, classCode, trackingNumber, dateShipped ) ).ConfigureAwait( false );
 					this.CheckCaSuccess( result.SubmitOrderShipmentListResult );
@@ -162,7 +162,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 		{
 			try
 			{
-				AP.CreateSubmit( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( () =>
+				AP.CreateSubmit( this.AdditionalLogInfo ).Do( () =>
 				{
 					var result = this._client.SubmitOrderShipmentList( this._credentials, this.AccountId, CreatePartialShipmentByOrderId( orderId, partialShipmentContents ) );
 					this.CheckCaSuccess( result );
@@ -178,7 +178,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 		{
 			try
 			{
-				await AP.CreateSubmitAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( async () =>
+				await AP.CreateSubmitAsync( this.AdditionalLogInfo ).Do( async () =>
 				{
 					var result = await this._client.SubmitOrderShipmentListAsync( this._credentials, this.AccountId, CreatePartialShipmentByOrderId( orderId, partialShipmentContents ) ).ConfigureAwait( false );
 					this.CheckCaSuccess( result.SubmitOrderShipmentListResult );
@@ -207,7 +207,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 		{
 			try
 			{
-				AP.CreateSubmit( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( () =>
+				AP.CreateSubmit( this.AdditionalLogInfo ).Do( () =>
 				{
 					var result = this._client.SubmitOrderShipmentList( this._credentials, this.AccountId, CreatePartialShipmentByClientId( clientOrderId, partialShipmentContents ) );
 					this.CheckCaSuccess( result );
@@ -223,7 +223,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 		{
 			try
 			{
-				await AP.CreateSubmitAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( async () =>
+				await AP.CreateSubmitAsync( this.AdditionalLogInfo ).Do( async () =>
 				{
 					var result = await this._client.SubmitOrderShipmentListAsync( this._credentials, this.AccountId, CreatePartialShipmentByClientId( clientOrderId, partialShipmentContents ) ).ConfigureAwait( false );
 					this.CheckCaSuccess( result.SubmitOrderShipmentListResult );
@@ -251,7 +251,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 
 		public void SubmitOrderShipmentList( IEnumerable< OrderShipment > orderShipments )
 		{
-			orderShipments.DoWithPages( 50, p => AP.CreateSubmit( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( () =>
+			orderShipments.DoWithPages( 50, p => AP.CreateSubmit( this.AdditionalLogInfo ).Do( () =>
 			{
 				var result = this._client.SubmitOrderShipmentList( this._credentials, this.AccountId, p.ToArray() );
 				this.CheckCaSuccess( result );
@@ -260,7 +260,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 
 		public async Task SubmitOrderShipmentListAsync( IEnumerable< OrderShipment > orderShipments )
 		{
-			await orderShipments.DoWithPagesAsync( 50, async p => await AP.CreateSubmitAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( async () =>
+			await orderShipments.DoWithPagesAsync( 50, async p => await AP.CreateSubmitAsync( this.AdditionalLogInfo ).Do( async () =>
 			{
 				var result = await this._client.SubmitOrderShipmentListAsync( this._credentials, this.AccountId, p.ToArray() ).ConfigureAwait( false );
 				this.CheckCaSuccess( result.SubmitOrderShipmentListResult );
@@ -289,7 +289,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 
 		public OrderShipmentHistoryResponse[] GetOrderShipmentHistoryList( int[] orderIdList, string[] clientOrderIdentifierList )
 		{
-			return AP.CreateSubmit( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( () =>
+			return AP.CreateSubmit( this.AdditionalLogInfo ).Get( () =>
 			{
 				var result = this._client.GetOrderShipmentHistoryList( this._credentials, this.AccountId, orderIdList, clientOrderIdentifierList );
 				this.CheckCaSuccess( result );
@@ -299,7 +299,7 @@ namespace ChannelAdvisorAccess.Services.Shipping
 
 		public async Task< OrderShipmentHistoryResponse[] > GetOrderShipmentHistoryListAsync( int[] orderIdList, string[] clientOrderIdentifierList )
 		{
-			return await AP.CreateSubmit( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( async () =>
+			return await AP.CreateSubmit( this.AdditionalLogInfo ).Get( async () =>
 			{
 				var result = await this._client.GetOrderShipmentHistoryListAsync( this._credentials, this.AccountId, orderIdList, clientOrderIdentifierList ).ConfigureAwait( false );
 				this.CheckCaSuccess( result.GetOrderShipmentHistoryListResult );
@@ -336,7 +336,9 @@ namespace ChannelAdvisorAccess.Services.Shipping
 			{
 				if( !shipmentResponse.Success )
 				{
-					ChannelAdvisorLogger.LogTrace( string.Format( "Error encountered while marking order shipped: {0}", shipmentResponse.Message ) );
+					string message = string.Format( "Error encountered while marking order shipped: {0}", shipmentResponse.Message );
+					var callInfo = new CallInfoBasic( connectionInfo: this.ToJson(), additionalInfo: this.AdditionalLogInfo() );
+					ChannelAdvisorLogger.LogTraceFailure( message, callInfo );
 					if( exceptionToThrow == null )
 						exceptionToThrow = new ChannelAdvisorException( shipmentResponse.Message );
 				}

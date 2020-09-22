@@ -62,7 +62,7 @@ namespace ChannelAdvisorAccess.Services.Items
 			return resultData;
 		}
 
-		private bool IsRequestSuccessful( object obj, bool logError = true )
+		private bool IsRequestSuccessful( object obj, bool logError = true, Mark mark = null )
 		{
 			var type = obj.GetType();
 
@@ -74,7 +74,7 @@ namespace ChannelAdvisorAccess.Services.Items
 
 			var message = ( string )type.GetProperty( "Message" ).GetValue( obj, null );
 
-			return this.IsRequestSuccessfulCommon( status, message, messageCode, logError );
+			return this.IsRequestSuccessfulCommon( status, message, messageCode, logError, mark );
 		}
 
 		private bool IsRequestSuccessfulImage( object obj )
@@ -106,16 +106,19 @@ namespace ChannelAdvisorAccess.Services.Items
 		/// <param name="message">Result message</param>
 		/// <param name="messageCode">Result message code</param>
 		/// <param name="logError">Need to log error message</param>
+		/// <param name="mark">Mark</param>
 		/// <returns>
 		/// 	<c>true</c> if request was successful; otherwise, <c>false</c>.
 		/// </returns>
-		private bool IsRequestSuccessfulCommon( ResultStatus status, string message, int messageCode, bool logError = true )
+		private bool IsRequestSuccessfulCommon( ResultStatus status, string message, int messageCode, bool logError = true, Mark mark = null )
 		{
 			var isRequestSuccessful = status == ResultStatus.Success && messageCode == 0;
 
 			if( !isRequestSuccessful && logError )
 			{
-				ChannelAdvisorLogger.LogTrace( string.Format( "CA Api Request for '{0}' failed with message: {1}", this.AccountId, message ) );
+				var callInfo = new CallInfoBasic( connectionInfo: this.ToJson(), mark: mark, additionalInfo: this.AdditionalLogInfo() );	
+				var messageLog = string.Format( "CA Api Request for '{0}' failed with message: {1}", this.AccountId, message );
+				ChannelAdvisorLogger.LogTraceFailure( messageLog, callInfo );
 			}
 
 			return isRequestSuccessful;

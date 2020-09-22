@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Web;
@@ -41,49 +42,51 @@ namespace ChannelAdvisorAccess.Misc
 		}
 
 		#region ActionPolicyCreator
-		public static ActionPolicy CreateQuery( Func< string > additionalLogInfo = null )
+		public static ActionPolicy CreateQuery( Func< string > additionalLogInfo = null, Mark mark = null, [ CallerMemberName ] string memberName = "" )
 		{
 			return ActionPolicy.Handle< Exception >().Retry( RetryCount, ( ex, i ) =>
 			{
 				var delay = GetDelay( ex, i );
-				var message = CreateRetryMessage( additionalLogInfo, i, delay, ex );
-				ChannelAdvisorLogger.LogTrace( ex, message );
+
+				var retryInfo = new RetryInfo( mark: mark, additionalInfo: additionalLogInfo(), retryAttempt: i, waitDurationSecs: delay.TotalSeconds, memberName: memberName );
+				ChannelAdvisorLogger.LogTraceRetryScheduled( retryInfo, ex );
 
 				SystemUtil.Sleep( delay );
 			} );
 		}
 
-		public static ActionPolicyAsync CreateQueryAsync( Func< string > additionalLogInfo = null )
+		public static ActionPolicyAsync CreateQueryAsync( Func< string > additionalLogInfo = null, Mark mark = null, [ CallerMemberName ] string memberName = "" )
 		{
 			return ActionPolicyAsync.Handle< Exception >().RetryAsync( RetryCount, async ( ex, i ) =>
 			{
 				var delay = GetDelay( ex, i );
-				var message = CreateRetryMessage( additionalLogInfo, i, delay, ex );
-				ChannelAdvisorLogger.LogTrace( ex, message );
+				
+				var retryInfo = new RetryInfo( mark: mark, additionalInfo: additionalLogInfo(), retryAttempt: i, waitDurationSecs: delay.TotalSeconds, memberName: memberName );
+				ChannelAdvisorLogger.LogTraceRetryScheduled( retryInfo, ex );
 
 				await Task.Delay( delay ).ConfigureAwait( false );
 			} );
 		}
 
-		public static ActionPolicy CreateSubmit( Func< string > additionalLogInfo = null )
+		public static ActionPolicy CreateSubmit( Func< string > additionalLogInfo = null, Mark mark = null, [ CallerMemberName ] string memberName = "" )
 		{
 			return ActionPolicy.Handle< Exception >().Retry( RetryCount, ( ex, i ) =>
 			{
 				var delay = GetDelay( ex, i );
-				var message = CreateRetryMessage( additionalLogInfo, i, delay, ex );
-				ChannelAdvisorLogger.LogTrace( ex, message );
+				var retryInfo = new RetryInfo( mark: mark, additionalInfo: additionalLogInfo(), retryAttempt: i, waitDurationSecs: delay.TotalSeconds, memberName: memberName );
+				ChannelAdvisorLogger.LogTraceRetryScheduled( retryInfo, ex );
 
 				SystemUtil.Sleep( delay );
 			} );
 		}
 
-		public static ActionPolicyAsync CreateSubmitAsync( Func< string > additionalLogInfo = null )
+		public static ActionPolicyAsync CreateSubmitAsync( Func< string > additionalLogInfo = null, Mark mark = null, [ CallerMemberName ] string memberName = "" )
 		{
 			return ActionPolicyAsync.Handle< Exception >().RetryAsync( RetryCount, async ( ex, i ) =>
 			{
 				var delay = GetDelay( ex, i );
-				var message = CreateRetryMessage( additionalLogInfo, i, delay, ex );
-				ChannelAdvisorLogger.LogTrace( ex, message );
+				var retryInfo = new RetryInfo( mark: mark, additionalInfo: additionalLogInfo(), retryAttempt: i, waitDurationSecs: delay.TotalSeconds, memberName: memberName );
+				ChannelAdvisorLogger.LogTraceRetryScheduled( retryInfo, ex );
 
 				await Task.Delay( delay ).ConfigureAwait( false );
 			} );
@@ -157,11 +160,6 @@ namespace ChannelAdvisorAccess.Misc
 			{
 				return string.Empty;
 			}
-		}
-
-		private static string CreateRetryMessage( Func< string > additionalLogInfo, int i, TimeSpan delay, Exception ex )
-		{
-			return "Retrying CA API get call for the {0} time, delay:{1}, Additional info: {2}, ExceptionSummary {3}".FormatWith( i, delay, ( additionalLogInfo ?? ( () => string.Empty ) )(), CollestMessages( ex ) );
 		}
 		#endregion
 	}

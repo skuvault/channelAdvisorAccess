@@ -45,7 +45,7 @@ namespace ChannelAdvisorAccess.Services.Orders
 		#region Ping
 		public void Ping()
 		{
-			AP.CreateQuery( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( () =>
+			AP.CreateQuery( this.AdditionalLogInfo ).Do( () =>
 			{
 				var result = this._client.Ping( this._credentials );
 				this.CheckCaSuccess( result );
@@ -54,7 +54,7 @@ namespace ChannelAdvisorAccess.Services.Orders
 
 		public async Task PingAsync()
 		{
-			await AP.CreateQueryAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Do( async () =>
+			await AP.CreateQueryAsync( this.AdditionalLogInfo ).Do( async () =>
 			{
 				var result = await this._client.PingAsync( this._credentials ).ConfigureAwait( false );
 				this.CheckCaSuccess( result.PingResult );
@@ -75,7 +75,7 @@ namespace ChannelAdvisorAccess.Services.Orders
 			return this.GetOrders< T >( orderCriteria );
 		}
 
-		public async Task< IEnumerable< T > > GetOrdersAsync< T >( DateTime startDate, DateTime endDate )
+		public async Task< IEnumerable< T > > GetOrdersAsync< T >( DateTime startDate, DateTime endDate, Mark mark = null )
 			where T : OrderResponseItem
 		{
 			var orderCriteria = new OrderCriteria
@@ -84,7 +84,7 @@ namespace ChannelAdvisorAccess.Services.Orders
 				StatusUpdateFilterEndTimeGMT = endDate
 			};
 
-			return await this.GetOrdersAsync< T >( orderCriteria ).ConfigureAwait( false );
+			return await this.GetOrdersAsync< T >( orderCriteria, mark ).ConfigureAwait( false );
 		}
 
 		/// <summary>
@@ -144,7 +144,7 @@ namespace ChannelAdvisorAccess.Services.Orders
 
 		private OrderResponseItem[] GetOrdersPage( OrderCriteria orderCriteria )
 		{
-			return AP.CreateQuery( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( () =>
+			return AP.CreateQuery( this.AdditionalLogInfo ).Get( () =>
 			{
 				var results = this._client.GetOrderList( this._credentials, this.AccountId, orderCriteria );
 				CheckCaSuccess( results );
@@ -205,7 +205,7 @@ namespace ChannelAdvisorAccess.Services.Orders
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters : orderCriteria.ToJson() ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters : orderCriteria.ToJson() ) );
 
 				if( string.IsNullOrEmpty( orderCriteria.DetailLevel ) )
 					orderCriteria.DetailLevel = "High";
@@ -222,27 +222,25 @@ namespace ChannelAdvisorAccess.Services.Orders
 					if( ordersFromPage == null || ordersFromPage.Length == 0 )
 						break;
 
-					ChannelAdvisorLogger.LogTrace( this.CreateMethodCallInfo( mark: mark, methodResult: ordersFromPage.OfType< T >().ToJson(), additionalInfo: "\"Result of ordersFromPage.OfType< T >() for page\"" ) );
+					ChannelAdvisorLogger.LogTrace( new CallInfo( connectionInfo: this.ToJson(), mark: mark, methodResult: ordersFromPage.OfType< T >().ToJson(), additionalInfo: "\"Result of ordersFromPage.OfType< T >() for page\"" ) );
 					orders.AddRange( ordersFromPage.OfType< T >() );
 					orderCriteria.PageNumberFilter += 1;
 				}
 
 				await this.CheckFulfillmentStatusAsync( orders, mark );
 
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodResult : orders.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : orderCriteria.ToJson() ) );
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : orders.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : orderCriteria.ToJson() ) );
 				return orders;
 			}
 			catch( Exception exception )
 			{
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters : orderCriteria.ToJson() ), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception );
 			}
 		}
 
 		private async Task< OrderResponseItem[] > GetOrdersPageAsync( OrderCriteria orderCriteria, Mark mark = null )
 		{
-			return await AP.CreateQueryAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo, mark : mark ) ).Get( async () =>
+			return await AP.CreateQueryAsync( this.AdditionalLogInfo, mark ).Get( async () =>
 			{
 				var results = await this._client.GetOrderListAsync( this._credentials, this.AccountId, orderCriteria ).ConfigureAwait( false );
 				CheckCaSuccess( results.GetOrderListResult );
@@ -269,9 +267,9 @@ namespace ChannelAdvisorAccess.Services.Orders
 				var numberAttempt = 0;
 				while( numberAttempt < MaxUnexpectedAttempt )
 				{
-					ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters : orderCriteria.ToJson() ) );
+					ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters : orderCriteria.ToJson() ) );
 					var answer = await this._client.GetOrderListAsync( this._credentials, this.AccountId, orderCriteria ).ConfigureAwait( false );
-					ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodResult : answer.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : orderCriteria.ToJson() ) );
+					ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : answer.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : orderCriteria.ToJson() ) );
 					if( answer.GetOrderListResult.Status == ResultStatus.Success )
 					{
 						result.AddRange( answer.GetOrderListResult.ResultData );
@@ -287,7 +285,7 @@ namespace ChannelAdvisorAccess.Services.Orders
 			orderCriteria.PageSize = prevPageSize;
 			orderCriteria.PageNumberFilter = prevPageNumber;
 
-			ChannelAdvisorLogger.LogTrace( this.CreateMethodCallInfo( mark: mark, methodResult: result.Select( o => o.OrderID ).ToJson(), additionalInfo: "\"Final result after looping\"", methodParameters: orderCriteria.ToJson() ) );
+			ChannelAdvisorLogger.LogTrace( new CallInfo( connectionInfo: this.ToJson(), mark: mark, methodResult: result.Select( o => o.OrderID ).ToJson(), additionalInfo: "\"Final result after looping\"", methodParameters: orderCriteria.ToJson() ) );
 			return result.ToArray();
 		}
 
@@ -298,7 +296,7 @@ namespace ChannelAdvisorAccess.Services.Orders
 		/// <returns>New order CA id.</returns>
 		public int SubmitOrder( OrderSubmit orderSubmit )
 		{
-			return AP.CreateSubmit( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( () =>
+			return AP.CreateSubmit( this.AdditionalLogInfo ).Get( () =>
 			{
 				var apiResults = this._client.SubmitOrder( this._credentials, this.AccountId, orderSubmit );
 				this.CheckCaSuccess( apiResults );
@@ -308,7 +306,7 @@ namespace ChannelAdvisorAccess.Services.Orders
 
 		public async Task< int > SubmitOrderAsync( OrderSubmit orderSubmit )
 		{
-			return await AP.CreateSubmitAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( async () =>
+			return await AP.CreateSubmitAsync( this.AdditionalLogInfo ).Get( async () =>
 			{
 				var apiResults = await this._client.SubmitOrderAsync( this._credentials, this.AccountId, orderSubmit ).ConfigureAwait( false );
 				this.CheckCaSuccess( apiResults.SubmitOrderResult );
@@ -332,10 +330,10 @@ namespace ChannelAdvisorAccess.Services.Orders
 			var cancelledOrderIds = new List< int >();
 			var ordersParts = ItemsService.ToChunks( refundedOrderIds, pageSize );
 
-			ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters : refundedOrderIds.ToJson() ) );
+			ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters : refundedOrderIds.ToJson() ) );
 			foreach( var part in ordersParts )
 			{
-				var ordersFulfillment = AP.CreateQuery( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( () =>
+				var ordersFulfillment = AP.CreateQuery( this.AdditionalLogInfo, mark ).Get( () =>
 				{
 					var results = this._fulfillmentServiceClient.GetOrderFulfillmentDetailList( this._fulfillmentServiceCredentials, this.AccountId, part.ToArray(), null );
 					CheckCaSuccess( results );
@@ -344,12 +342,12 @@ namespace ChannelAdvisorAccess.Services.Orders
 					return resultData;
 				} );
 
-				ChannelAdvisorLogger.LogTrace( this.CreateMethodCallInfo( mark : mark, methodResult : ordersFulfillment.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : part.ToJson() ) );
+				ChannelAdvisorLogger.LogTrace( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : ordersFulfillment.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : part.ToJson() ) );
 
 				var cancelledOrderIdsPart = ordersFulfillment.Where( o => o.FulfillmentList.All( fulfillment => fulfillment.FulfillmentStatus == "Canceled" ) ).Select( o => o.OrderID );
 				cancelledOrderIds.AddRange( cancelledOrderIdsPart );
 			}
-			ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodResult : cancelledOrderIds.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : refundedOrderIds.ToJson() ) );
+			ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : cancelledOrderIds.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : refundedOrderIds.ToJson() ) );
 
 			CancelOrders( orders, cancelledOrderIds );
 		}
@@ -367,10 +365,10 @@ namespace ChannelAdvisorAccess.Services.Orders
 
 			var ordersParts = ItemsService.ToChunks( refundedOrderIds, pageSize );
 
-			ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters : refundedOrderIds.ToJson() ) );
+			ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters : refundedOrderIds.ToJson() ) );
 			var cancelledOrderIds = ( await ordersParts.ProcessInBatchAsync( 3, async part =>
 			{
-				var ordersFulfillment = await AP.CreateQueryAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( async () =>
+				var ordersFulfillment = await AP.CreateQueryAsync( this.AdditionalLogInfo, mark ).Get( async () =>
 				{
 					var results = await this._fulfillmentServiceClient.GetOrderFulfillmentDetailListAsync( this._fulfillmentServiceCredentials, this.AccountId, part.ToArray(), null ).ConfigureAwait( false );
 					CheckCaSuccess( results.GetOrderFulfillmentDetailListResult );
@@ -379,12 +377,12 @@ namespace ChannelAdvisorAccess.Services.Orders
 					return resultData;
 				} ).ConfigureAwait( false );
 
-				ChannelAdvisorLogger.LogTrace( this.CreateMethodCallInfo( mark : mark, methodResult : ordersFulfillment.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : part.ToJson() ) );
+				ChannelAdvisorLogger.LogTrace( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : ordersFulfillment.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : part.ToJson() ) );
 
 				return ordersFulfillment.Where( o => o.FulfillmentList.All( fulfillment => fulfillment.FulfillmentStatus == "Canceled" ) ).Select( o => o.OrderID );
 			} ).ConfigureAwait( false ) ).SelectMany( x => x ).ToArray();
 
-			ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodResult : cancelledOrderIds.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : refundedOrderIds.ToJson() ) );
+			ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : cancelledOrderIds.ToJson(), additionalInfo : this.AdditionalLogInfo(), methodParameters : refundedOrderIds.ToJson() ) );
 
 			CancelOrders( orders, cancelledOrderIds );
 		}
@@ -421,7 +419,7 @@ namespace ChannelAdvisorAccess.Services.Orders
 
 		public IEnumerable< OrderUpdateResponse > UpdateOrderList( OrderUpdateSubmit[] orderUpdates )
 		{
-			return AP.CreateSubmit( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( () =>
+			return AP.CreateSubmit( this.AdditionalLogInfo ).Get( () =>
 			{
 				var results = this._client.UpdateOrderList( this._credentials, this.AccountId, orderUpdates );
 				this.CheckCaSuccess( results );
@@ -431,7 +429,7 @@ namespace ChannelAdvisorAccess.Services.Orders
 
 		public async Task< IEnumerable< OrderUpdateResponse > > UpdateOrderListAsync( OrderUpdateSubmit[] orderUpdates )
 		{
-			return await AP.CreateSubmitAsync( ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo ) ).Get( async () =>
+			return await AP.CreateSubmitAsync( this.AdditionalLogInfo ).Get( async () =>
 			{
 				var results = await this._client.UpdateOrderListAsync( this._credentials, this.AccountId, orderUpdates ).ConfigureAwait( false );
 				this.CheckCaSuccess( results.UpdateOrderListResult );
@@ -474,16 +472,18 @@ namespace ChannelAdvisorAccess.Services.Orders
 
 		private void LogUnexpectedError( OrderCriteria orderCriteria, APIResultOfArrayOfOrderResponseItem orderList, int? pageNumberBy1, string callerMemberName, int attempt )
 		{
-			var additionalLogInfo = ExtensionsInternal.CreateMethodCallInfo( this.AdditionalLogInfo, callerMemberName )();
+			var callInfo = new CallInfoBasic( connectionInfo: this.ToJson(), additionalInfo: this.AdditionalLogInfo(), memberName: callerMemberName );
 			var criteria = string.Format( "StatusUpdateFilterBeginTimeGMTField: {0}. StatusUpdateFilterEndTimeGMTField: {1}. Number in sequence for pageSize equal 1 : {2}", orderCriteria.StatusUpdateFilterBeginTimeGMT.GetValueOrDefault(), orderCriteria.StatusUpdateFilterEndTimeGMT.GetValueOrDefault(), pageNumberBy1 );
-			var message = "Unexpected Error. Attempt: {0}. Additional info: {1} {2}".FormatWith( attempt, additionalLogInfo, criteria );
+			var message = "Unexpected Error. Attempt: {0}. Criteria: {1}".FormatWith( attempt, criteria );
 			var exception = new ChannelAdvisorException( orderList.MessageCode, message );
-			ChannelAdvisorLogger.LogTraceException( exception );
+			ChannelAdvisorLogger.LogTraceException( callInfo, exception, message );
 		}
 
 		public async Task DoDelayUnexpectedAsync( TimeSpan time, int attempt )
 		{
-			ChannelAdvisorLogger.LogTrace( string.Format( @"Wait by reason of error 1 (Unexpected) {0} minute(s). Attempt: {1}", time.Minutes, attempt ) );
+			string message = string.Format( @"Wait by reason of error 1 (Unexpected) {0} minute(s). Attempt: {1}", time.Minutes, attempt );
+			var callInfo = new CallInfoBasic( connectionInfo: this.ToJson(), additionalInfo: this.AdditionalLogInfo() );
+			ChannelAdvisorLogger.LogTraceFailure( message, callInfo );
 			await Task.Delay( time ).ConfigureAwait( false );
 		}
 	}

@@ -363,16 +363,14 @@ namespace ChannelAdvisorAccess.REST.Services.Items
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
 				var result = await base.GetResponseAsync< DistributionCenter >( ChannelAdvisorEndPoint.DistributionCentersUrl, mark );
 				distributionCenters.AddRange( result.Response.Where( dc => !dc.IsDeleted ) );
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodResult : distributionCenters.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodResult : distributionCenters.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 			}
 			catch( Exception exception )
 			{
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo()), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception );
 			}
 
 			return distributionCenters.ToArray();
@@ -487,16 +485,14 @@ namespace ChannelAdvisorAccess.REST.Services.Items
 					try
 					{
 						var url = new ItemsServiceUrlBuilder().GetUpdateProductQuantityUrl( product.ID );
-						ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, methodParameters: url, additionalInfo : this.AdditionalLogInfo() ) );
+						ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: url, additionalInfo : this.AdditionalLogInfo() ) );
 						await base.PostAsync( url, new { Value = request }, mark ).ConfigureAwait( false );
 						
-						ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodParameters: url, methodResult: request.ToJson(), additionalInfo : this.AdditionalLogInfo()) );
+						ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: url, methodResult: request.ToJson(), additionalInfo : this.AdditionalLogInfo()) );
 					}
 					catch( Exception exception )
 					{
-						var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ), exception );
-						ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-						throw channelAdvisorException;
+						throw this.HandleExceptionAndLog( mark, exception );
 					}
 				}
 			}
@@ -857,18 +853,16 @@ namespace ChannelAdvisorAccess.REST.Services.Items
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
 
 				var url = new ItemsServiceUrlBuilder().GetUpdateProductUrl( product.ID );
 				await base.PutAsync( url, request ).ConfigureAwait( false );
 						
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodResult : string.Empty, additionalInfo : this.AdditionalLogInfo()) );
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo()) );
 			}
-			catch(Exception exception)
+			catch( Exception exception )
 			{
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo()), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception );
 			}
 		}
 
@@ -1081,11 +1075,11 @@ namespace ChannelAdvisorAccess.REST.Services.Items
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters: url ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters: url ) );
 
 				result = await base.GetResponseAsync< Product >( url, mark, pageNumber: pageNumber, pageSize: pageSize ).ConfigureAwait( false );
 
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, 
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, 
 					methodParameters: url,
 					methodResult : result.ToJson(), 
 					additionalInfo : this.AdditionalLogInfo() ) );
@@ -1093,9 +1087,7 @@ namespace ChannelAdvisorAccess.REST.Services.Items
 			}
 			catch( Exception exception )
 			{
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception );
 			}
 
 			return result;
@@ -1116,9 +1108,9 @@ namespace ChannelAdvisorAccess.REST.Services.Items
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters: ChannelAdvisorEndPoint.ProductExportUrl ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters: ChannelAdvisorEndPoint.ProductExportUrl ) );
 				var response = await this.PostAsyncAndGetResult< ProductExportResponse >( ChannelAdvisorEndPoint.ProductExportUrl, csvHeader, mark ).ConfigureAwait( false );
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, methodParameters: ChannelAdvisorEndPoint.ProductExportUrl, methodResult : response.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, methodParameters: ChannelAdvisorEndPoint.ProductExportUrl, methodResult : response.ToJson(), additionalInfo : this.AdditionalLogInfo() ) );
 
 				ThrowIfProductExportFailed ( response.Status );
 				responseFileUrl = response.ResponseFileUrl;
@@ -1130,11 +1122,11 @@ namespace ChannelAdvisorAccess.REST.Services.Items
 					// wait 15 seconds and ask job status
 					await Task.Delay( productExportWaitTimeInSec * 1000 ).ConfigureAwait( false );
 
-					ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters: url ) );
+					ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters: url ) );
 
 					var exportStatusResponse = await this.GetEntityAsync< ProductExportResponse >( url, mark ).ConfigureAwait( false );
 
-					ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, 
+					ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, 
 						methodParameters: url,
 						methodResult : exportStatusResponse.ToJson(), 
 						additionalInfo : this.AdditionalLogInfo() ) );
@@ -1162,9 +1154,7 @@ namespace ChannelAdvisorAccess.REST.Services.Items
 							|| channelAdvisorEx.MessageCode == (int)HttpStatusCode.InternalServerError ) )
 					throw new ChannelAdvisorProductExportUnavailableException( channelAdvisorEx.Message, channelAdvisorEx );
 
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception );
 			}
 
 			return new Dictionary< string, int >();
@@ -1252,11 +1242,11 @@ namespace ChannelAdvisorAccess.REST.Services.Items
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters: ChannelAdvisorEndPoint.ProductsUrl ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo(), methodParameters: ChannelAdvisorEndPoint.ProductsUrl ) );
 
 				total = ( await base.GetEntityAsync< int >( ChannelAdvisorEndPoint.ProductsUrl + "/$count" ).ConfigureAwait( false ) );
 				
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, 
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, 
 					methodParameters: ChannelAdvisorEndPoint.ProductsUrl,
 					methodResult : total.ToJson() , 
 					additionalInfo : this.AdditionalLogInfo() ) );
@@ -1264,9 +1254,7 @@ namespace ChannelAdvisorAccess.REST.Services.Items
 			}
 			catch(Exception exception)
 			{
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception );
 			}
 
 			return total;
@@ -1289,20 +1277,18 @@ namespace ChannelAdvisorAccess.REST.Services.Items
 
 			try
 			{
-				ChannelAdvisorLogger.LogStarted( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
+				ChannelAdvisorLogger.LogStarted( new CallInfo( connectionInfo: this.ToJson(), mark : mark, additionalInfo : this.AdditionalLogInfo() ) );
 
 				var result = await base.GetResponseAsync< Product >( url, mark, false ).ConfigureAwait( false );
 				product = result.Response.FirstOrDefault();
 
-				ChannelAdvisorLogger.LogEnd( this.CreateMethodCallInfo( mark : mark, 
+				ChannelAdvisorLogger.LogEnd( new CallInfo( connectionInfo: this.ToJson(), mark : mark, 
 													  methodResult : result.ToJson(), 
 													  additionalInfo : this.AdditionalLogInfo() ) );
 			}
 			catch( Exception exception )
 			{
-				var channelAdvisorException = new ChannelAdvisorException( this.CreateMethodCallInfo( mark : mark, additionalInfo : this.AdditionalLogInfo() ), exception );
-				ChannelAdvisorLogger.LogTraceException( channelAdvisorException );
-				throw channelAdvisorException;
+				throw this.HandleExceptionAndLog( mark, exception );
 			}
 
 			return product;
