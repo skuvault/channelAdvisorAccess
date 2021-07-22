@@ -303,6 +303,37 @@ namespace ChannelAdvisorAccessTests.REST.Inventory
 			result.Response.Should().NotBeEmpty();
 		}
 
+		[Test]
+		public async Task GetFilteredSkusAllPagesByUpdateDateForPeriod()
+		{
+			var startDate = DateTime.Now.AddDays( -49 );
+			var endDate = DateTime.Now;
+			const int pageSize = 80;
+
+			var filter = new ItemsFilter
+			{
+				 Criteria = new InventoryItemCriteria
+				 {
+					DateRangeField = TimeStampFields.LastUpdateDate,
+					DateRangeStartGMT = startDate,
+					DateRangeEndGMT = endDate
+				 }
+			};
+
+			var skuListStartPage = 1;
+			var skuListSyncComplete = false;
+			var skus = new List< string >();
+			while ( !skuListSyncComplete )
+			{
+				var result = await this.ItemsService.GetFilteredSkusAsync( filter, skuListStartPage, pageSize, CancellationToken.None );
+				skus.AddRange( result.Response );				
+				skuListSyncComplete = result.AllPagesQueried;
+				skuListStartPage = result.AllPagesQueried ? 1 : result.FinalPageNumber + 1;				
+			}
+
+			skus.Should().NotBeNullOrEmpty();
+		}
+
 		[ Test ]
 		public void GetFilteredItemsPageByUpdateDate()
 		{
